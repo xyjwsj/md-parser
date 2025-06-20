@@ -44,18 +44,6 @@ var lineFlags = []LinePattern{
 	},
 }
 
-var styleFlags = map[string]StyleType{
-	"`([^`\\r\\n]+)":                        LineCode,
-	`$$([^]]+)$$\(([^)]+)(\s+"([^"]+)")?\)`: Link,
-	`^!\[([^]]+)\]\(([^)]+)(\s+"[^"]+")?\)`: Image,
-}
-
-var fontFlags = map[string]FontType{
-	`\*{2}[^\*{2}]+\*{2}`: Bold,
-	`\*{1}[^\*{1}]+\*{1}`: Italic,
-	`\~{2}[^\~{2}]+\~{2}`: Strikethrough,
-}
-
 var headingStylePattern = `(#{0,6}) `
 
 func ParseNode(lineStr string) Node {
@@ -74,7 +62,8 @@ func ParseNode(lineStr string) Node {
 				s := strArr[len(strArr)-1]
 				rank = strings.Count(s, "#")
 			}
-			log.Println(level, rank, item.Type, groups)
+			log.Println(level, rank, item.Type, groups[len(groups)-1])
+			matchItem(groups[len(groups)-1])
 			break
 		} else {
 
@@ -99,6 +88,25 @@ func getLeadingWhitespaceLength(s string) int {
 	return 0
 }
 
+var itemFlags = map[string]StyleType{
+	"`([^`]+)":                              LineCode,
+	`$$([^]]+)$$\(([^)]+)(\s+"([^"]+)")?\)`: Link,
+	`^!\[([^]]+)\]\(([^)]+)(\s+"[^"]+")?\)`: Image,
+	`\*{2}([^*]+)\*{2}`:                     Bold,
+	`([*_])((?:[^_*]|\n)+)\1`:               Italic,
+	`\~{2}([^~]+)\~{2}`:                     Strikethrough,
+}
+
 func matchItem(str string) []Item {
+	data := make(map[StyleType][]string, 30)
+	for key, itm := range itemFlags {
+		strArr := pattern(key, str)
+		if len(strArr) > 1 {
+			data[itm] = strArr[1:]
+		}
+	}
+
+	log.Println(data)
+
 	return nil
 }

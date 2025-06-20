@@ -18,20 +18,13 @@ var (
 type StyleType int
 
 var (
-	StyleNone StyleType = 0 //普通样式
-	LineCode  StyleType = 1 //行内代码
-	Link      StyleType = 2 //链接
-	Image     StyleType = 3 //图片
-	Font      StyleType = 4 //字体样式
-)
-
-type FontType int
-
-var (
-	FontNone      FontType = 0
-	Bold          FontType = 1 // 粗体
-	Italic        FontType = 2 // 斜体
-	Strikethrough FontType = 3 // 删除线
+	StyleNone     StyleType = 0 //普通样式
+	LineCode      StyleType = 1 //行内代码
+	Link          StyleType = 2 //链接
+	Image         StyleType = 3 //图片
+	Bold          StyleType = 4 // 粗体
+	Italic        StyleType = 5 // 斜体
+	Strikethrough StyleType = 6 // 删除线
 )
 
 type Item struct {
