@@ -2,7 +2,7 @@ package parser
 
 import "strings"
 
-type LineCall func(line int, info Content)
+type LineCall func(line int, node Node)
 
 type MDDocument struct {
 	lineItem []Node
@@ -16,7 +16,7 @@ func MdDoc() *MDDocument {
 func (doc *MDDocument) Parse(content string) {
 	split := strings.Split(content, "\n")
 	for _, line := range split {
-		ParseLine(line)
+		ParseNode(line)
 	}
 }
 
@@ -30,12 +30,6 @@ func (doc *MDDocument) Walk() {
 
 func (doc *MDDocument) callChildNode(line int, node *Node) {
 	if doc.call != nil {
-		if node.Nodes == nil {
-			doc.call(line, node.Info)
-			return
-		}
-		for _, itm := range node.Nodes {
-			doc.callChildNode(line, &itm)
-		}
+
 	}
 }
