@@ -1,41 +1,58 @@
 package parser
 
-type NodeType int
+// TokenType 表示标记类型
+type TokenType int
 
-var (
-	NodeNone    NodeType = 0
-	Heading     NodeType = 1 //标题
-	OrderList   NodeType = 2 //有序列表
-	UnOrderList NodeType = 3 //无序列表
-	Text        NodeType = 4 //普通文本
-	Paragraph   NodeType = 5 //段落
-	References  NodeType = 6 //引用
-	BlockCode   NodeType = 7 //块代码
-	Table       NodeType = 8 //表格
-	Divider     NodeType = 9 //分割线
+const (
+	TokenEOF TokenType = iota
+	TokenHeader
+	TokenParagraph
+	TokenList
+	TokenListItem
+	TokenCodeBlock
+	TokenHorizontalRule
+	TokenEmphasis
+	TokenStrong
+	TokenLink
+	TokenImage
+	TokenText
 )
 
-type StyleType int
-
-var (
-	StyleNone     StyleType = 0 //普通样式
-	LineCode      StyleType = 1 //行内代码
-	Link          StyleType = 2 //链接
-	Image         StyleType = 3 //图片
-	Bold          StyleType = 4 // 粗体
-	Italic        StyleType = 5 // 斜体
-	Strikethrough StyleType = 6 // 删除线
-)
-
-type Item struct {
-	Type  StyleType
-	Text  string
-	Items []Item
+// Token 表示一个Markdown标记
+type Token struct {
+	Type    TokenType
+	Content string
+	Level   int    // 用于标题和列表
+	Indent  int    // 用于列表项缩进
+	Link    string // 用于链接和图片
+	Alt     string // 用于图片
 }
 
+// Lexer 词法分析器
+type Lexer struct {
+	input        string
+	position     int  // 当前字符位置
+	readPosition int  // 下一个字符位置
+	ch           byte // 当前字符
+}
+
+// Node 表示AST中的一个节点
 type Node struct {
-	Type  NodeType // 行类型
-	Level int      // 层级(结构层面)
-	Rank  int      // 等级(样式层面)
-	Info  []Item   // 当前行所有样式
+	Type     TokenType
+	Content  string
+	Level    int
+	Indent   int
+	Link     string
+	Alt      string
+	Children []*Node
 }
+
+// Parser 语法分析器
+type Parser struct {
+	lexer   *Lexer
+	current Token
+	next    Token
+}
+
+// Renderer HTML渲染器
+type Renderer struct{}
