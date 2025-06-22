@@ -55,45 +55,48 @@ func (p *Parser) parseParagraph() *Node {
 
 // 解析列表
 func (p *Parser) parseList() *Node {
-	list := &Node{Type: TokenList}
+	// 创建主列表根节点
+	list := &Node{
+		Type:   TokenList,
+		Indent: p.current.Indent,
+	}
 
-	// 使用栈保存当前层级的父节点（每个节点代表一个 List 或 ListItem）
+	// 使用栈保存当前可用的 TokenList 节点
 	stack := []*Node{list}
 
 	for p.current.Type == TokenListItem {
-		currentItem := &Node{
+		item := &Node{
 			Type:    TokenListItem,
 			Indent:  p.current.Indent,
 			Content: p.current.Content,
 		}
-		currentItem.Children = p.parseInline(p.current.Content)
+		item.Children = p.parseInline(p.current.Content)
 
-		// 找到合适的父节点（即缩进小于当前项的最后一个节点）
-		var parentNode *Node
+		// 找到合适的父 TokenList（栈中最后一个缩进小于当前项的）
+		var parentList *Node
 		for i := len(stack) - 1; i >= 0; i-- {
-			if stack[i].Indent < currentItem.Indent {
-				parentNode = stack[i]
+			if stack[i].Indent < item.Indent {
+				parentList = stack[i]
 				break
 			}
 		}
 
-		// 如果没找到，说明当前项是顶级列表项
-		if parentNode == nil {
-			parentNode = list
+		// 如果没找到合适的父节点，默认使用根列表
+		if parentList == nil {
+			parentList = list
 		}
 
-		// 添加当前项到父节点下
-		parentNode.Children = append(parentNode.Children, currentItem)
+		// 添加到父 TokenList 下
+		parentList.Children = append(parentList.Children, item)
 
-		// 如果下一个项缩进更深，则将当前项压入栈中作为新层级起点
-		if p.next.Type == TokenListItem && p.next.Indent > currentItem.Indent {
-			stack = append(stack, currentItem)
-		} else {
-			// 否则，清理栈中不再适用的层级
-			for len(stack) > 0 && stack[len(stack)-1].Indent >= currentItem.Indent {
-				stack = stack[:len(stack)-1]
+		// 如果下一个项缩进更深，说明属于当前项的子列表，需创建新 TokenList
+		if p.next.Type == TokenListItem && p.next.Indent > item.Indent {
+			subList := &Node{
+				Type:   TokenList,
+				Indent: item.Indent + 1,
 			}
-			stack = append(stack, currentItem)
+			item.Children = append(item.Children, subList) // 子列表作为当前项的子节点
+			stack = append(stack, subList)
 		}
 
 		p.nextToken()
