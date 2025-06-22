@@ -114,7 +114,8 @@ func (l *Lexer) NextToken() Token {
 		//bullet := l.ch
 		l.readChar() // 消耗列表标记
 		l.readChar() // 消耗空格
-		tok.Type = TokenListItem
+		tType := TokenListItem
+		tok.Type = tType
 		tok.Indent = indent
 		tok.Content = l.readUntilNewline()
 		return tok
@@ -122,13 +123,14 @@ func (l *Lexer) NextToken() Token {
 
 	// 检查是否为数字列表
 	if IsDigit(l.ch) && l.peekChar() == '.' && l.peekChar2() == ' ' {
-		indent := l.countLeadingSpaces()
+		//indent := l.countLeadingSpaces()
 		for IsDigit(l.ch) {
 			l.readChar()
 		}
 		l.readChar() // 消耗 .
 		l.readChar() // 消耗空格
-		tok.Type = TokenListItem
+		tType := TokenListItem
+		tok.Type = tType
 		tok.Indent = indent
 		tok.Content = l.readUntilNewline()
 		return tok
