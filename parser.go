@@ -48,9 +48,10 @@ func (p *Parser) Parse() *Node {
 // 解析标题
 func (p *Parser) parseHeader() *Node {
 	return &Node{
-		Type:    TokenHeader,
-		Level:   p.current.Level,
-		Content: p.current.Content,
+		Type:     TokenHeader,
+		Level:    p.current.Level,
+		Content:  p.current.Content,
+		Children: p.parseInline(p.current.Content),
 	}
 }
 
