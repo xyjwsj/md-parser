@@ -8,9 +8,15 @@ func (p *Parser) nextToken() {
 	p.next = p.lexer.NextToken()
 }
 
+func (p *Parser) resetPreviousToken() {
+
+}
+
 // Parse 解析Markdown文档
 func (p *Parser) Parse() *Node {
 	root := &Node{Type: TokenText}
+
+	nextToken := true
 
 	for p.current.Type != TokenEOF {
 		switch p.current.Type {
@@ -20,12 +26,20 @@ func (p *Parser) Parse() *Node {
 			root.Children = append(root.Children, p.parseParagraph())
 		case TokenListItem:
 			root.Children = append(root.Children, p.parseList())
+			nextToken = false
 		case TokenCodeBlock:
 			root.Children = append(root.Children, p.parseCodeBlock())
 		case TokenHorizontalRule:
 			root.Children = append(root.Children, p.parseHorizontalRule())
+		case TokenTable:
+			root.Children = append(root.Children, p.parseTable())
 		}
-		p.nextToken()
+
+		if nextToken {
+			p.nextToken()
+		} else {
+			nextToken = true
+		}
 	}
 
 	return root
@@ -289,6 +303,57 @@ func (p *Parser) parseInline(content string) []*Node {
 	}
 
 	return nodes
+}
+
+func (p *Parser) parseTable() *Node {
+	tableContent := p.current.Content
+	lines := strings.Split(tableContent, "\n")
+
+	if len(lines) < 2 {
+		return nil
+	}
+
+	headers := strings.Split(strings.Trim(lines[0], "|"), "|")
+	rows := lines[2:]
+
+	// 验证分隔行是否是有效的表格分隔符
+	validSeparator := true
+	for _, c := range lines[1] {
+		if c != '-' && c != ' ' && c != ':' && c != '|' {
+			validSeparator = false
+			break
+		}
+	}
+
+	if !validSeparator || len(rows) == 0 {
+		return nil
+	}
+
+	table := &Node{
+		Type:    TokenTable,
+		Content: tableContent,
+	}
+
+	// 添加表头
+	headerRow := &Node{Type: TokenTableRow}
+	for _, header := range headers {
+		cell := &Node{Type: TokenTableCell, Content: strings.TrimSpace(header)}
+		headerRow.Children = append(headerRow.Children, cell)
+	}
+	table.Children = append(table.Children, headerRow)
+
+	// 添加数据行
+	for _, row := range rows {
+		cells := strings.Split(strings.Trim(row, "|"), "|")
+		dataRow := &Node{Type: TokenTableRow}
+		for _, cell := range cells {
+			cellNode := &Node{Type: TokenTableCell, Content: strings.TrimSpace(cell)}
+			dataRow.Children = append(dataRow.Children, cellNode)
+		}
+		table.Children = append(table.Children, dataRow)
+	}
+
+	return table
 }
 
 // NewParser 创建一个新的语法分析器

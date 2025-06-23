@@ -15,6 +15,9 @@ const (
 	TokenStrong
 	TokenLink
 	TokenImage
+	TokenTable
+	TokenTableRow
+	TokenTableCell
 	TokenText
 )
 

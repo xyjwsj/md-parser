@@ -70,7 +70,7 @@ func (l *Lexer) countLeadingSpaces() int {
 	return count
 }
 
-// 读取下一个标记
+// NextToken 读取下一个标记
 func (l *Lexer) NextToken() Token {
 	var tok Token
 
@@ -148,11 +148,56 @@ func (l *Lexer) NextToken() Token {
 		return tok
 	}
 
+	// 检查是否为表格行
+	if l.ch == '|' {
+		// 读取整行并保存当前位置以便回退
+		position := l.position
+		line := l.readUntilNewline()
+
+		// 检查下一行是否为分隔行
+		nextLine := ""
+		if l.ch == '\n' {
+			l.readChar() // 跳过换行
+			nextLine = l.readUntilNewline()
+		}
+
+		// 回退位置，保持 Lexer 状态不变
+		//l.position = position
+		l.readPosition = position
+		l.readChar()
+
+		// 判断是否为表格（第二行为有效的分隔行）
+		isSeparatorValid := isValidSeparator(nextLine)
+		if isSeparatorValid {
+			tok.Type = TokenTable
+			tok.Content = l.readTable()
+			return tok
+		} else {
+			// 不是表格，恢复原来的位置，继续处理其他类型
+			l.position = position
+			l.ch = line[0]
+		}
+	}
+
 	// 处理段落
 	tok.Type = TokenParagraph
 	tok.Content = l.readParagraph()
 	tok.Indent = indent
 	return tok
+}
+
+func (l *Lexer) readTable() string {
+	var result strings.Builder
+	for {
+		line := l.readUntilNewline()
+		if !strings.HasPrefix(line, "|") {
+			break
+		}
+		result.WriteString(line)
+		result.WriteByte('\n')
+		l.readChar() // 消耗换行符
+	}
+	return strings.TrimSuffix(result.String(), "\n")
 }
 
 // 读取代码块
@@ -204,4 +249,25 @@ func (l *Lexer) peekChar2() byte {
 		return 0
 	}
 	return l.input[l.readPosition+1]
+}
+
+func isValidSeparator(line string) bool {
+	line = strings.Trim(line, "| \t")
+	parts := strings.Split(line, "|")
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if len(trimmed) == 0 || !isAllDash(trimmed) {
+			return false
+		}
+	}
+	return true
+}
+
+func isAllDash(s string) bool {
+	for _, c := range s {
+		if c != '-' {
+			return false
+		}
+	}
+	return true
 }
