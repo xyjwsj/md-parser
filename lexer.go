@@ -223,7 +223,7 @@ func (l *Lexer) readParagraph() string {
 
 	// 检查下一行是否继续当前段落
 	l.skipWhitespace()
-	if l.ch != 0 && l.ch != '#' && l.ch != '*' && l.ch != '-' && l.ch != '+' && !IsDigit(l.ch) {
+	if l.ch != 0 && l.ch != '#' && l.ch != '*' && l.ch != '-' && l.ch != '+' && l.ch != '|' && !IsDigit(l.ch) {
 		l.position = position
 		l.readChar() // 消耗换行符
 		result.WriteByte('\n')
